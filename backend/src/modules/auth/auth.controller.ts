@@ -9,7 +9,7 @@ const isProd = process.env.COOKIE_SECURE === "true";
 const cookieOptions = {
   httpOnly: true,
   secure: isProd,
-  sameSite: "lax" as const,
+  sameSite: (isProd ? "none" : "lax") as "none" | "lax",
 };
 
 function setAuthCookies(res: Response, accessToken: string, refreshToken: string) {
