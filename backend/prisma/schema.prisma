@@ -1,0 +1,121 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  ADMIN
+  KITCHEN
+  CUSTOMER
+}
+
+enum OrderStatus {
+  PENDING
+  PREPARING
+  READY
+  COMPLETED
+  CANCELLED
+}
+
+model User {
+  id        String   @id @default(uuid())
+  name      String
+
+  // Staff (ADMIN, KITCHEN) sign in with email + password.
+  // Customers sign in with just name + phone (no password) — simplified
+  // for this assessment; see README for the OTP note.
+  email     String?  @unique
+  password  String?
+
+  // Required for CUSTOMER role, null for staff accounts. Enforced in
+  // application code (Prisma can't conditionally require a field based
+  // on another field's value).
+  phone     String?  @unique
+
+  role      Role     @default(CUSTOMER)
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Orders this user placed as the *customer* (i.e. the order is theirs)
+  ordersAsCustomer Order[]   @relation("CustomerOrders")
+  // Orders this user (an admin) created on behalf of someone else
+  ordersPlacedByStaff Order[] @relation("PlacedByStaff")
+  auditLogs        AuditLog[]
+
+  @@map("users")
+}
+
+model Category {
+  id    String     @id @default(uuid())
+  name  String     @unique
+  items MenuItem[]
+
+  @@map("categories")
+}
+
+model MenuItem {
+  id          String   @id @default(uuid())
+  name        String
+  description String?
+  price       Decimal  @db.Decimal(10, 2)
+  imageUrl    String?
+  isAvailable Boolean  @default(true)
+  categoryId  String
+  category    Category @relation(fields: [categoryId], references: [id])
+  orderItems  OrderItem[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("menu_items")
+}
+
+model Order {
+  id         String      @id @default(uuid())
+
+  // The customer the order belongs to (always set, even for admin-placed orders)
+  customerId String
+  customer   User        @relation("CustomerOrders", fields: [customerId], references: [id])
+
+  // Set only when an Admin placed this order on behalf of the customer.
+  // Null means the customer placed it themselves through self-service checkout.
+  placedByStaffId String?
+  placedByStaff   User?   @relation("PlacedByStaff", fields: [placedByStaffId], references: [id])
+  placedViaAdmin  Boolean @default(false)
+
+  status     OrderStatus @default(PENDING)
+  totalPrice Decimal     @db.Decimal(10, 2)
+  notes      String?
+  items      OrderItem[]
+  createdAt  DateTime    @default(now())
+  updatedAt  DateTime    @updatedAt
+
+  @@map("orders")
+}
+
+model OrderItem {
+  id         String   @id @default(uuid())
+  orderId    String
+  order      Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  menuItemId String
+  menuItem   MenuItem @relation(fields: [menuItemId], references: [id])
+  quantity   Int
+  priceEach  Decimal  @db.Decimal(10, 2)
+
+  @@map("order_items")
+}
+
+model AuditLog {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  action    String
+  metadata  Json?
+  createdAt DateTime @default(now())
+
+  @@map("audit_logs")
+}

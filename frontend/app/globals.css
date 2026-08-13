@@ -1,0 +1,66 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  @apply bg-paper-100 text-char-900 font-body;
+}
+
+/* Paper texture used behind the cart and order-card surfaces */
+.paper-texture {
+  background-color: theme("colors.paper.100");
+  background-image: theme("backgroundImage.paper-grain");
+  background-size: theme("backgroundSize.grain");
+}
+
+/* Die-cut notch, evoking a printed order slip */
+.order-notch::before {
+  content: "";
+  position: absolute;
+  top: -7px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 14px;
+  height: 14px;
+  background: theme("colors.char.900");
+  border-radius: 50%;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+.fly-to-cart-dot {
+  animation: fly-to-cart 0.55s cubic-bezier(0.35, 0, 0.3, 1) forwards;
+}
+@keyframes fly-to-cart {
+  0% {
+    opacity: 1;
+    transform: translate(0, 0) scale(1);
+  }
+  65% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translate(var(--dx), var(--dy)) scale(0.15);
+  }
+}
+
+.cart-badge-bump {
+  animation: badge-bump 0.35s ease-out;
+}
+@keyframes badge-bump {
+  0% {
+    transform: scale(1);
+  }
+  45% {
+    transform: scale(1.5);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
