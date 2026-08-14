@@ -84,7 +84,7 @@ export default function Navbar() {
         </span>
       </Link>
 
-      <div className="flex min-w-0 items-center gap-4 overflow-x-auto sm:gap-6">
+      <div className="flex min-w-0 items-center gap-4 overflow-x-auto py-3 sm:gap-6">
         {user?.role === "CUSTOMER" && (
           <>
             <NavLink href="/menu">Menu</NavLink>
